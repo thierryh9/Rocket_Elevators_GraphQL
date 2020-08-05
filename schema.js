@@ -1,90 +1,202 @@
+//----------Dependencies-----------//
 var express = require('express');
 var { graphqlHTTP } = require('express-graphql');
 var { buildSchema } = require('graphql');
-var express = require('express');
-var mysql = require('mysql');
-var database = require('./database');
-const { Server } = require('http');
 
-var query = require('./mySQL.js');
-var { pgquery, pgconnection } = require('./postgres.js');
 
-//--------------------SCHEMA---------------------------------//
-
-const EmployeeType = new GraphQLObjectType({
-    name: 'employee',
-    fields: () =>({
-        id: {type: GraphQLInt},
-        lastName: {type: GraphQLString},
-        firstName: {type: GraphQLString},  
-        email: {type: GraphQLString}
-    })
-})
-
-const ElevType = new GraphQLObjectType({
-    name: 'elevator',
-    fields: () => ({
-        id: {type: GraphQLInt},
-        serial_number: {type: GraphQLString},
-        status: {type: GraphQLString},
-        column_id: {type: GraphQLInt},
-    })
-})
-
-//---------------------GRAPHQL------------------------------//
-
-const RootQuery = new GraphQLObjectType({
-    name: 'RootQueryType',
-    fields: {
-        elevator:{            
-            type: ElevatorType,
-            args: {id:{type: GraphQLInt}},
-            resolve(parent, args){
-                fetchElevators()               
-                return _.find(elevators, {id: args.id});
-            }
-        },
-        elevators: {
-            type: new GraphQLList(ElevatorType),
-            resolve(parent, args){
-                fetchElevators()                
-                return elevators
-            }
-        },
-        employee:{
-            type: EmployeeType,
-            args: {id:{type: GraphQLInt}},
-            resolve(parent, args){
-                fetchEmployees()
-                return _.find(employees, {id: args.id});
-            }
-        },
-        employees: {
-            type: new GraphQLList(EmployeeType),
-            resolve(parent, args){
-                fetchEmployees()
-                return employees
-            }
-        },
-        elevators: {
-            type: new GraphQLList(ElevatorType),
-            args: {status:{type: GraphQLString}},
-            resolve(parent, args){
-                fetchElevators()
-                return _.filter(elevators,  e => e.status != args.status)
-            }
-        }
+//-----------------------------------------------CONNECTIONS------------------------------------------//
+//----------POSTGRES-----------//
+const {Client} = require('pg')
+const client = new Client({
+    host: 'codeboxx-postgresql.cq6zrczewpu2.us-east-1.rds.amazonaws.com',
+    user: 'codeboxx',
+    password: 'Codeboxx1!',
+    database: 'ThierryHarvey'
+});
+client.connect(function(error){
+    if (!!error) {
+        console.log("Unable to connect to PSQL database.")
+    } else {
+        console.log("You are connected to PSQL database.")
     }
 });
 
-module.exports = new GraphQLSchema({
-    query: RootQuery
-})
+//----------MYSQL-----------//
+var mysql = require('mysql');
+const { resolve } = require('path');
+var connectio = mysql.createConnection({
+    host: 'codeboxx.cq6zrczewpu2.us-east-1.rds.amazonaws.com',
+    user: 'codeboxx'  ,
+    password: 'Codeboxx1!',
+    database: 'ThierryHarvey'  
+
+});
+connectio.connect(function(error){
+    if (!!error) {
+        console.log("Unable to connect to mySQL database.");
+    } else {
+        console.log("You are connected to mySQL database.");
+    }
+});
+
+//-----------------------------------------SCHEMA CREATION---------------------------------------------//
+var schema = buildSchema(`
+    type Query {
+        interventions(building_id: Int!): Intervention
+        buildings(id: Int!): Building
+        employees(id: Int!): Employee
+    }
+    type Elevator {
+        serialNumber: String
+        elevator_model: String
+        building_type: String
+        status: String
+        installDate: String
+        inspectionDate: String
+        certificat: String
+        information: String
+        notes: String
+        created_at: String
+        updated_at: String
+        column_id: Int
+    }
+    type Intervention {
+        building_id: Int!
+        building_details: [Building_detail]
+        start_date_time_intervention: String
+        end_date_time_intervention: String
+        employee_id: Int!
+        address: Address
+    }
+    type Building {
+        id: Int!
+        fullName: String
+        address: Address
+        customer: Customer
+        building_details: [Building_detail]
+        interventions: [Intervention]
+    }
+    
+    type Address {
+        street: String
+        suite: String
+        city: String
+        postalCode: String
+        country: String
+    }
+    type Customer {
+        entrepriseName: String
+        authorityName: String
+    }
+    type Employee {
+        id: Int!
+        firstName: String
+        lastName: String
+        building_details: [Building_detail]
+        interventions: [Intervention]
+    }
+    type Building_detail {
+        building_id: Int!
+        information_key: String
+        value: String
+    }
+`);
+
+//-----------------------------------------Queries---------------------------------------------//
+var root = {
+    // 1
+    interventions: getInterventions,
+    // 2
+    buildings: getBuildings,
+    // 3
+    employees: getEmployees
+};
+
+//-----------------------------------------Resolve---------------------------------------------//
+async function getInterventions({building_id}) {
+    // get intervention
+    var intervention = await querypg('SELECT * FROM "factintervention" WHERE building_id = ' + building_id)
+    resolve = intervention[0]
+    // get address
+    address = await query('SELECT * FROM addresses WHERE entity = "Building" AND entity_id = ' + building_id)
+
+    resolve['address']= address[0];
+
+    return resolve
+};
+
+async function getBuildings({id}) {
+    // get building
+    var buildings = await query('SELECT * FROM buildings WHERE id = ' + id )
+    resolve = buildings[0]
+
+    // get interventions
+    interventions = await querypg('SELECT * FROM "factintervention" WHERE building_id = ' + id)
+
+    // get customer
+    customer = await query('SELECT * FROM customers WHERE id = ' + resolve.customer_id)
+
+    resolve['customer']= customer[0];
+    resolve['interventions']= interventions;
+
+    return resolve
+};
+
+async function getEmployees({id}) {
+    // get employee
+    var employees = await query('SELECT * FROM employees WHERE id = ' + id )
+    resolve = employees[0]
+    
+    // get interventions
+    interventions = await querypg('SELECT * FROM "factintervention" WHERE employee_id = ' + id)
+    result = interventions[0]
+    console.log(interventions)
 
 
-const app = express();
-app.use('/api', graphqlHTTP({
-  schema: schema,
-  graphiql: true,
+    // get building details
+    building_details = await query('SELECT * FROM building_details WHERE building_id = ' + result.building_id)
+    console.log(building_details)
+
+    resolve['interventions']= interventions;
+    resolve['building_details']= building_details;
+
+    return resolve
+};
+
+//-----------------------------------------Queries functions---------------------------------------------//
+function query (queryString) {
+    console.log(queryString)
+    return new Promise((resolve, reject) => {
+        con.query(queryString, function(err, result) {
+            if (err) {
+                return reject(err);
+            } 
+            return resolve(result)
+        })
+    })
+};
+function querypg(queryString) {
+    return new Promise((resolve, reject) => {
+        client.query(queryString, function(err, result) {
+            if (err) {
+                return reject(err);
+            }
+            return resolve(result.rows)
+        })
+    })
+};
+//-----------------------------------------Express Server---------------------------------------------//
+var app = express();
+app.use('/graphql', graphqlHTTP({
+    schema: schema,
+    rootValue: root,
+    graphiql: true
 }));
-app.listen(4000);
+
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log("Express GraphQL server is running");
+});
+
+
