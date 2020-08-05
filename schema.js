@@ -23,7 +23,7 @@ client.connect(function(error){
 
 //----------MYSQL-----------//
 var mysql = require('mysql');
-const { resolve } = require('path');
+//const { resolve } = require('path');
 var connectio = mysql.createConnection({
     host: 'codeboxx.cq6zrczewpu2.us-east-1.rds.amazonaws.com',
     user: 'codeboxx'  ,
@@ -61,15 +61,15 @@ var schema = buildSchema(`
         column_id: Int
     }
     type Intervention {
-        building_id: Int!
+        building_id: Int
         building_details: [Building_detail]
-        start_date_time_intervention: String
-        end_date_time_intervention: String
-        employee_id: Int!
+        start_intervention: String
+        end_intervention: String
+        employee_id: Int
         address: Address
     }
     type Building {
-        id: Int!
+        id: Int
         fullName: String
         address: Address
         customer: Customer
@@ -89,14 +89,14 @@ var schema = buildSchema(`
         authorityName: String
     }
     type Employee {
-        id: Int!
+        id: Int
         firstName: String
         lastName: String
         building_details: [Building_detail]
         interventions: [Intervention]
     }
     type Building_detail {
-        building_id: Int!
+        building_id: Int
         information_key: String
         value: String
     }
@@ -115,10 +115,11 @@ var root = {
 //-----------------------------------------Resolve---------------------------------------------//
 async function getInterventions({building_id}) {
     // get intervention
-    var intervention = await querypg('SELECT * FROM "factintervention" WHERE building_id = ' + building_id)
+    var intervention = await querypg('SELECT * FROM factintervention WHERE id = ' + building_id)
     resolve = intervention[0]
+    console.log (intervention[0])
     // get address
-    address = await query('SELECT * FROM addresses WHERE entity = "Building" AND entity_id = ' + building_id)
+    address = await query('SELECT a.street, a.suite, a.city, a.postalCode, a.country FROM buildings b JOIN addresses a ON a.id=b.address_id WHERE b.id=' + intervention[0].building_id)
 
     resolve['address']= address[0];
 
@@ -131,7 +132,7 @@ async function getBuildings({id}) {
     resolve = buildings[0]
 
     // get interventions
-    interventions = await querypg('SELECT * FROM "factintervention" WHERE building_id = ' + id)
+    interventions = await querypg('SELECT * FROM factintervention WHERE building_id = ' + id)
 
     // get customer
     customer = await query('SELECT * FROM customers WHERE id = ' + resolve.customer_id)
@@ -148,7 +149,7 @@ async function getEmployees({id}) {
     resolve = employees[0]
     
     // get interventions
-    interventions = await querypg('SELECT * FROM "factintervention" WHERE employee_id = ' + id)
+    interventions = await querypg('SELECT * FROM factintervention WHERE employee_id = ' + id)
     result = interventions[0]
     console.log(interventions)
 
@@ -167,7 +168,7 @@ async function getEmployees({id}) {
 function query (queryString) {
     console.log(queryString)
     return new Promise((resolve, reject) => {
-        con.query(queryString, function(err, result) {
+        connectio.query(queryString, function(err, result) {
             if (err) {
                 return reject(err);
             } 
