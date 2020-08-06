@@ -97,8 +97,8 @@ var schema = buildSchema(`
     }
     type Building_detail {
         building_id: Int
-        information_key: String
-        value: String
+        infoKey: String
+        infoValue: String
     }
 `);
 
@@ -120,8 +120,11 @@ async function getInterventions({building_id}) {
     console.log (intervention[0])
     // get address
     address = await query('SELECT a.street, a.suite, a.city, a.postalCode, a.country FROM buildings b JOIN addresses a ON a.id=b.address_id WHERE b.id=' + intervention[0].building_id)
-
+    //building details
+    building_details = await query('SELECT * FROM building_details WHERE building_id = ' + intervention[0].building_id)
+    
     resolve['address']= address[0];
+    resolve['building_details']= building_details;
 
     return resolve
 };
@@ -133,7 +136,7 @@ async function getBuildings({id}) {
 
     // get interventions
     interventions = await querypg('SELECT * FROM factintervention WHERE building_id = ' + id)
-
+    console.log (interventions)
     // get customer
     customer = await query('SELECT * FROM customers WHERE id = ' + resolve.customer_id)
 
@@ -151,15 +154,17 @@ async function getEmployees({id}) {
     // get interventions
     interventions = await querypg('SELECT * FROM factintervention WHERE employee_id = ' + id)
     result = interventions[0]
-    console.log(interventions)
+    //console.log(interventions)
 
 
     // get building details
-    building_details = await query('SELECT * FROM building_details WHERE building_id = ' + result.building_id)
-    console.log(building_details)
-
+    var i;
+    for (i = 0; i < interventions.length; i++){
+        building_details = await query('SELECT * FROM building_details WHERE building_id = ' + interventions[i].building_id)
+        interventions[i]['building_details']= building_details;
+        console.log(building_details)
+    }   
     resolve['interventions']= interventions;
-    resolve['building_details']= building_details;
 
     return resolve
 };
