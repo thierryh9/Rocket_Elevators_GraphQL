@@ -41,6 +41,8 @@ connectio.connect(function(error){
 
 //-----------------------------------------SCHEMA CREATION---------------------------------------------//
 var schema = buildSchema(`
+    scalar DateTime
+    
     type Query {
         interventions(building_id: Int!): Intervention
         buildings(id: Int!): Building
@@ -63,8 +65,8 @@ var schema = buildSchema(`
     type Intervention {
         building_id: Int
         building_details: [Building_detail]
-        start_intervention: String
-        end_intervention: String
+        start_intervention: DateTime
+        end_intervention: DateTime
         employee_id: Int
         address: Address
     }
