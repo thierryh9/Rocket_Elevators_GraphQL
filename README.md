@@ -80,8 +80,8 @@ QUESTIONS
       
       *You just need to change the employees_id and send it to see the changes
       
-      **************************** BONUS **************************
-lien github: https://github.com/thierryh9/Rocket_Elevator_Rest_API_GoLang
-url pour le tester: 
+      **************************** BONUS ************************** GraphQL in JAVA****************
+lien github: https://github.com/alex07L/Rocket_Elevators_GraphQL
+url pour le tester: https://relevator.herokuapp.com/graphql
 
 
