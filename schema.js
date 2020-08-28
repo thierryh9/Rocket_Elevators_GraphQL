@@ -89,6 +89,7 @@ var schema = buildSchema(`
     type Customer {
         entrepriseName: String
         authorityName: String
+        email: String
     }
     type Employee {
         id: Int
@@ -170,6 +171,17 @@ async function getEmployees({id}) {
 
     return resolve
 };
+
+async function getCustomer({email}) {
+
+    var email = await query_mysql('SELECT * FROM customer WHERE email = "${email}"')
+    resolve = email[0]
+    console.log(email)
+    
+ 
+    return resolve
+ 
+ };
 
 //-----------------------------------------Queries functions---------------------------------------------//
 function query (queryString) {
