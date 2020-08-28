@@ -47,6 +47,7 @@ var schema = buildSchema(`
         interventions(building_id: Int!): Intervention
         buildings(id: Int!): Building
         employees(id: Int!): Employee
+        customers(email:String!): Customer
     }
     type Elevator {
         serialNumber: String
