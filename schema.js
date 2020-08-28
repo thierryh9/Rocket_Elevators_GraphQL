@@ -176,7 +176,7 @@ async function getEmployees({id}) {
 
 async function getCustomer({email}) {
 
-    var email = await query('SELECT * FROM customer WHERE email = "${email}"')
+    var email = await query('SELECT * FROM customers WHERE email = "${email}"')
     resolve = email[0]
     console.log(email)
     
