@@ -112,7 +112,9 @@ var root = {
     // 2
     buildings: getBuildings,
     // 3
-    employees: getEmployees
+    employees: getEmployees,
+
+    customers: getCustomer
 };
 
 //-----------------------------------------Resolve---------------------------------------------//
