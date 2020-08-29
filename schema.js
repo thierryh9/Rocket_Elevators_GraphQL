@@ -48,6 +48,12 @@ var schema = buildSchema(`
         buildings(id: Int!): Building
         employees(id: Int!): Employee
         customers(email:String!): Customer
+        customerId(email: String!): Customer
+        buildingByCustomer(email: String!): [Building]
+        batteries(email: String!): [Battery]
+        columns(email: String!): [Column]
+        elevators(email: String!): [Elevator]
+        elevatorsByColumn(id: Int!): [Elevator]
     }
     type Elevator {
         serialNumber: String
@@ -79,7 +85,24 @@ var schema = buildSchema(`
         building_details: [Building_detail]
         interventions: [Intervention]
     }
-    
+    type Battery {
+        id: Int!
+        building_id: Int
+        status: String
+        employee_id: Int
+        installdate: DateTime
+        inspectionDate: DateTime
+        information: String
+        notes: String
+    }
+    type Column {
+        id: Int!
+        battery_id: Int
+        numberFloor: Int
+        status: String
+        information: String
+        notes: String
+    }
     type Address {
         street: String
         suite: String
@@ -115,7 +138,19 @@ var root = {
     // 3
     employees: getEmployees,
 
-    customers: getCustomer
+    customers: getCustomer,
+
+    customerId: getCustomerId,
+    
+    buildingByCustomer: getBuildingsByCustomer,
+    
+    elevatorsByColumn: getElevatorsByColumn,
+    
+    batteries: getBatteries,
+    
+    columns: getColumns,
+    
+    elevators: getElevators
 };
 
 //-----------------------------------------Resolve---------------------------------------------//
@@ -185,6 +220,63 @@ async function getCustomer({email}) {
     return resolve
  
  };
+
+ async function getBatteries({email}) {
+
+    var email = await query(`
+        SELECT a.id, a.building_id, a.status, a.installdate, a.inspectionDate, a.information, a.notes 
+        FROM batteries a JOIN buildings b ON a.building_id = b.id JOIN customers c ON b.customer_id = c.id WHERE c.email = "${email}"`)
+    
+    resolve = email
+    return resolve
+};
+
+async function getColumns({email}){
+    var email = await query(
+        `SELECT d.id, d.battery_id, d.numberFloor, d.status, d.information, d.notes
+        FROM batteries a JOIN buildings b ON a.building_id = b.id JOIN columns d ON a.id = d.battery_id JOIN customers c ON b.customer_id = c.id WHERE c.email = "${email}"`)
+    
+    resolve = email
+    return resolve
+};
+
+async function getElevatorsByColumn({id}){
+
+    var elevators = await query(`SELECT e.id, e.column_id FROM elevators e JOIN columns c ON e.column_id = c.id WHERE c.id = "${id}"`)
+
+    resolve = elevators
+    return resolve
+};
+
+async function getCustomerId({email}) {
+
+    customer = await query(`SELECT * FROM customers WHERE email = "${email}"`)
+
+    resolve= customer[0];
+
+    return resolve
+};
+
+async function getBuildingsByCustomer({email}) {
+    
+    var buildings = await query(`SELECT b.id FROM buildings b JOIN customers c ON b.customer_id = c.id WHERE c.email = "${email}"` )
+    resolve = buildings
+
+
+    return resolve
+};
+
+async function getElevators({email}){
+
+    var elevators = await query(
+        `SELECT e.id, e.column_id, e.building_type, e.serialNumber, e.model, e.status, e.installDate, e.inspectionDate, e.certificat, e.information, e.notes
+        FROM batteries a JOIN buildings b ON a.building_id = b.id JOIN columns d ON a.id = d.battery_id JOIN elevators e ON d.id = e.column_id JOIN customers c ON b.customer_id = c.id WHERE c.email = "${email}"`)
+    
+    resolve = elevators
+    return resolve
+
+
+};
 
 //-----------------------------------------Queries functions---------------------------------------------//
 function query (queryString) {
