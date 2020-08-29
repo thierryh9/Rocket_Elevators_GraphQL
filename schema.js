@@ -54,7 +54,19 @@ var schema = buildSchema(`
         columns(email: String!): [Column]
         elevators(email: String!): [Elevator]
         elevatorsByColumn(id: Int!): [Elevator]
+        getEverything(email: String!): Everything
     }
+
+    type Everything {
+        customer: Customer
+        address: Address
+        buildings: [Building]
+        batteries: [Battery]
+        columns: [Column]
+        elevators: [Elevator]
+        
+    }
+
     type Elevator {
         serialNumber: String
         elevator_model: String
@@ -104,6 +116,7 @@ var schema = buildSchema(`
         notes: String
     }
     type Address {
+        id: Int
         street: String
         suite: String
         city: String
@@ -111,9 +124,11 @@ var schema = buildSchema(`
         country: String
     }
     type Customer {
+        id: Int
         entrepriseName: String
         authorityName: String
         email: String
+        address_id: Int
     }
     type Employee {
         id: Int
@@ -150,7 +165,11 @@ var root = {
     
     columns: getColumns,
     
-    elevators: getElevators
+    elevators: getElevators,
+
+    getEverything: getEverything
+
+
 };
 
 //-----------------------------------------Resolve---------------------------------------------//
@@ -277,6 +296,76 @@ async function getElevators({email}){
 
 
 };
+
+async function getEverything({email}){
+
+    let resolve, customer, building, battery, column, elevator, batteryFinal,  columnFinal, elevatorFinal;
+    
+    customer = await query(`SELECT * FROM customers WHERE email = "${email}"`)
+    
+    address = await query(`SELECT * FROM addresses WHERE id = ${customer[0].address_id}`)
+    
+    building = await query(`SELECT * FROM buildings WHERE customer_id = ${customer[0].id}`)
+    try {
+ 
+ 
+        for (i=0;i<building.length;i++) {
+            
+            battery = await query(`SELECT * FROM batteries WHERE building_id = ${building[i].id}`)
+            if(i===0) {
+                batteryFinal = battery
+            }
+            else {
+                for (z=0;z<column.length;z++) { 
+                    batteryFinal.push(battery)
+                }
+            }
+        }
+        for(i=0;i<battery.length;i++) {
+            column = await query(`SELECT * FROM columns WHERE battery_id = ${battery[i].id}`)
+            if(i===0) {
+                columnFinal = column
+            }
+            else {
+                for (z=0;z<column.length;z++) {
+                    columnFinal.push(column)
+                }
+            }
+        }
+        for(i=0;i<column.length;i++) {
+            elevator = await query(`SELECT * FROM elevators WHERE column_id = ${column[i].id}`)
+            if(i===0) {
+                elevatorFinal = elevator
+            }else {
+                for(z=0;z<elevator.length;z++) {
+                    elevatorFinal.push(elevator[z])
+                }
+            }
+        }
+        resolve = {
+            customer: customer[0],
+            address: address[0],
+            buildings: [...building],
+            batteries: [...batteryFinal],
+            columns: [...columnFinal],
+            elevators: [...elevatorFinal]
+        }
+    }catch{
+        resolve = {
+            customer: customer[0],
+            address: address[0],
+            buildings: [...building],
+        }
+    }
+    return resolve
+    //console.log(columnFinal)
+
+     
+    // console.log(address);
+    // console.log(building);
+
+};
+
 
 //-----------------------------------------Queries functions---------------------------------------------//
 function query (queryString) {
