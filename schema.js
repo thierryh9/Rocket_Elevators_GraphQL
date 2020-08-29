@@ -68,6 +68,7 @@ var schema = buildSchema(`
     }
 
     type Elevator {
+        id: Int
         serialNumber: String
         elevator_model: String
         building_type: String
@@ -94,6 +95,7 @@ var schema = buildSchema(`
         fullName: String
         address: Address
         customer: Customer
+        customer_id: Int
         building_details: [Building_detail]
         interventions: [Intervention]
     }
