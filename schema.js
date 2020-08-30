@@ -144,6 +144,27 @@ var schema = buildSchema(`
         infoKey: String
         infoValue: String
     }
+    type Mutation {
+        createIntervention(customer_id: Int!, building_id: Int!, battery_id: Int!, column_id: Int, elevator_id: Int, report: String): MutationInput
+    }
+    type MutationInput {
+        id: Int
+        author: Int!
+        customer_id: Int!
+        building_id: Int!
+        battery_id: Int!
+        column_id: Int
+        elevator_id: Int
+        employee_id: Int
+        start_intervention: DateTime
+        end_intervention: DateTime
+        result: String!
+        report: String
+        status: String!
+        created_at: DateTime
+        updated_at: DateTime
+    }
+        
 `);
 
 //-----------------------------------------Queries---------------------------------------------//
@@ -169,7 +190,11 @@ var root = {
     
     elevators: getElevators,
 
-    getEverything: getEverything
+    getEverything: getEverything,
+
+    createIntervention: updatecreated
+
+    
 
 
 };
@@ -367,6 +392,16 @@ async function getEverything({email}){
     // console.log(building);
 
 };
+
+    async function updatecreated({customer_id, building_id, battery_id, column_id, elevator_id, report}) {
+
+        // Query the MySQL batteries table.
+            creation_of_intervention = await query("INSERT INTO interventions (author, customer_id, building_id, battery_id, column_id, elevator_id, result, report, status, created_at, updated_at ) VALUES(1,'"+customer_id+"','"+building_id+"','"+battery_id+"','"+column_id+"','"+elevator_id+"', 'incomplete','"+report+"', 'pending', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());");
+            show_intervention_creation = await query('SELECT * FROM interventions WHERE id = ' + creation_of_intervention.insertId);
+            console.log(creation_of_intervention)
+            resolve = show_intervention_creation[0];
+            return resolve
+        };
 
 
 //-----------------------------------------Queries functions---------------------------------------------//
