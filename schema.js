@@ -403,7 +403,7 @@ async function getEverything({email}){
     async function updatecreated({customer_id, building_id, battery_id, column_id, elevator_id, report}) {
 
         // Query the MySQL batteries table.
-            creation_of_intervention = await query("INSERT INTO interventions (author, customer_id, building_id, battery_id, column_id, elevator_id, result, report, status, created_at, updated_at ) VALUES(1,'"+customer_id+"','"+building_id+"','"+battery_id+"','"+column_id+"','"+elevator_id+"', 'incomplete','"+report+"', 'pending', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());");
+            creation_of_intervention = await query("INSERT INTO interventions (customer_id, building_id, battery_id, column_id, elevator_id, result, report, status, created_at, updated_at ) VALUES('"+customer_id+"','"+building_id+"','"+battery_id+"','"+column_id+"','"+elevator_id+"', 'incomplete','"+report+"', 'pending', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());");
             show_intervention_creation = await query('SELECT * FROM interventions WHERE id = ' + creation_of_intervention.insertId);
             console.log(creation_of_intervention)
             resolve = show_intervention_creation[0];
