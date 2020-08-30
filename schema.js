@@ -83,11 +83,18 @@ var schema = buildSchema(`
         column_id: Int
     }
     type Intervention {
+        id: Int
         building_id: Int
+        battery_id: String
+        column_id: String
+        elevator_id: String
         building_details: [Building_detail]
         start_intervention: DateTime
         end_intervention: DateTime
         employee_id: Int
+        status: String
+        report: String
+        result: String
         address: Address
     }
     type Building {
@@ -145,7 +152,7 @@ var schema = buildSchema(`
         infoValue: String
     }
     type Mutation {
-        createIntervention(author: Int, customer_id: Int, building_id: Int, battery_id: Int, column_id: Int, elevator_id: Int, report: String): MutationInput
+        createIntervention(customer_id: Int, building_id: Int, battery_id: Int, column_id: Int, elevator_id: Int, report: String): MutationInput
     }
     type MutationInput {
         id: Int
@@ -393,7 +400,7 @@ async function getEverything({email}){
 
 };
 
-    async function updatecreated({author, customer_id, building_id, battery_id, column_id, elevator_id, report, status, created_at, updated_at}) {
+    async function updatecreated({customer_id, building_id, battery_id, column_id, elevator_id, report}) {
 
         // Query the MySQL batteries table.
             creation_of_intervention = await query("INSERT INTO interventions (author, customer_id, building_id, battery_id, column_id, elevator_id, result, report, status, created_at, updated_at ) VALUES(1,'"+customer_id+"','"+building_id+"','"+battery_id+"','"+column_id+"','"+elevator_id+"', 'incomplete','"+report+"', 'pending', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());");
