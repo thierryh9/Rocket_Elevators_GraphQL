@@ -393,7 +393,7 @@ async function getEverything({email}){
 
 };
 
-    async function updatecreated({customer_id, building_id, battery_id, column_id, elevator_id, report}) {
+    async function updatecreated({customer_id, building_id, battery_id, column_id, elevator_id, report, status, created_at, updated_at}) {
 
         // Query the MySQL batteries table.
             creation_of_intervention = await query("INSERT INTO interventions (customer_id, building_id, battery_id, column_id, elevator_id, result, report, status, created_at, updated_at ) VALUES('"+customer_id+"','"+building_id+"','"+battery_id+"','"+column_id+"','"+elevator_id+"', 'incomplete','"+report+"', 'pending', CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());");
