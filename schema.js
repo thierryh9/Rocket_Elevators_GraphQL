@@ -145,22 +145,22 @@ var schema = buildSchema(`
         infoValue: String
     }
     type Mutation {
-        createIntervention(customer_id: Int!, building_id: Int!, battery_id: Int!, column_id: Int, elevator_id: Int, report: String): MutationInput
+        createIntervention(customer_id: Int, building_id: Int, battery_id: Int, column_id: Int, elevator_id: Int, report: String): MutationInput
     }
     type MutationInput {
         id: Int
-        author: Int!
-        customer_id: Int!
-        building_id: Int!
-        battery_id: Int!
+        author: Int
+        customer_id: Int
+        building_id: Int
+        battery_id: Int
         column_id: Int
         elevator_id: Int
         employee_id: Int
         start_intervention: DateTime
         end_intervention: DateTime
-        result: String!
+        result: String
         report: String
-        status: String!
+        status: String
         created_at: DateTime
         updated_at: DateTime
     }
